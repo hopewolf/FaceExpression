@@ -10,6 +10,14 @@
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 DataSets/
+FaceAlignment.VC.opendb
+FaceAlignment.sln
+haarcascade_eye_tree_eyeglasses.xml
+haarcascade_frontalface_alt.xml
+img/
+lbpcascade_frontalface.xml
+model/
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
