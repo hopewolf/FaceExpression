@@ -14,6 +14,7 @@
     <ClCompile Include="Facedetect.cpp" />
     <ClCompile Include="LBF.cpp" />
     <ClCompile Include="LBFRegressor.cpp" />
+    <ClCompile Include="libfacedetect-example.cpp" />
     <ClCompile Include="liblinear\daxpy.c" />
     <ClCompile Include="liblinear\ddot.c" />
     <ClCompile Include="liblinear\dnrm2.c" />
@@ -27,6 +28,7 @@
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="facedetect-dll.h" />
     <ClInclude Include="LBF.h" />
     <ClInclude Include="LBFRegressor.h" />
     <ClInclude Include="liblinear\blas.h" />
@@ -68,7 +70,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>G:\opencv\opencv\build\include\opencv2;G:\opencv\opencv\build\include\opencv;G:\opencv\opencv\build\include;$(IncludePath)</IncludePath>
-    <LibraryPath>G:\opencv\opencv\build\x86\vc12\lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>G:\face-alignment-in-3000fps-master\FaceAlignment_vs2013\FaceAlignment\lib;G:\opencv\opencv\build\x86\vc12\lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -89,8 +91,8 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>opencv_calib3d2413d.lib;opencv_contrib2413d.lib;opencv_core2413d.lib;opencv_features2d2413d.lib;opencv_flann2413d.lib;opencv_gpu2413d.lib;opencv_highgui2413d.lib;opencv_imgproc2413d.lib;opencv_legacy2413d.lib;opencv_ml2413d.lib;opencv_nonfree2413d.lib;opencv_objdetect2413d.lib;opencv_photo2413d.lib;opencv_stitching2413d.lib;opencv_ts2413d.lib;opencv_video2413d.lib;opencv_videostab2413d.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>G:\opencv\opencv\build\x86\vc12\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>libfacedetect.lib;opencv_calib3d2413d.lib;opencv_contrib2413d.lib;opencv_core2413d.lib;opencv_features2d2413d.lib;opencv_flann2413d.lib;opencv_gpu2413d.lib;opencv_highgui2413d.lib;opencv_imgproc2413d.lib;opencv_legacy2413d.lib;opencv_ml2413d.lib;opencv_nonfree2413d.lib;opencv_objdetect2413d.lib;opencv_photo2413d.lib;opencv_stitching2413d.lib;opencv_ts2413d.lib;opencv_video2413d.lib;opencv_videostab2413d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>G:\opencv\opencv\build\x86\vc12\lib;G:\face-alignment-in-3000fps-master\FaceAlignment_vs2013\FaceAlignment\lib;</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

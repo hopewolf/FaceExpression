@@ -5,6 +5,10 @@
 //  Created by lequan on 1/24/15.
 //  Copyright (c) 2015 lequan. All rights reserved.
 //
+#include "opencv2/opencv.hpp"
+#include "facedetect-dll.h"
+#pragma comment(lib,"libfacedetect.lib")
+
 #include "LBFRegressor.h"
 using namespace std;
 using namespace cv;
@@ -129,95 +133,206 @@ _cleanup_:
 }
 
 
-void detectAndDraw( Mat& img, CascadeClassifier& cascade,
-                    LBFRegressor& regressor,
-                    double scale, bool tryflip ){
-	Mat myclip;
-    int i = 0;
-    double t = 0;
-    vector<Rect> faces,faces2;
-    const static Scalar colors[] =  { CV_RGB(0,0,255),
-        CV_RGB(0,128,255),
-        CV_RGB(0,255,255),
-        CV_RGB(0,255,0),
-        CV_RGB(255,128,0),
-        CV_RGB(255,255,0),
-        CV_RGB(255,0,0),
-        CV_RGB(255,0,255)} ;
-    Mat gray, smallImg( cvRound (img.rows/scale), cvRound(img.cols/scale), CV_8UC1 );
 
-    cvtColor( img, gray, CV_BGR2GRAY );
-    resize( gray, smallImg, smallImg.size(), 0, 0, INTER_LINEAR );
-    equalizeHist( smallImg, smallImg );
-    
-    // --Detection
-    t = (double)cvGetTickCount();
-    cascade.detectMultiScale( smallImg, faces,
-        1.1, 2, 0
-        //|CV_HAAR_FIND_BIGGEST_OBJECT
-        //|CV_HAAR_DO_ROUGH_SEARCH
-        |CV_HAAR_SCALE_IMAGE
-        ,
-        Size(30, 30) );
-    if( tryflip ){
-        flip(smallImg, smallImg, 1);
-        cascade.detectMultiScale( smallImg, faces2,
-                                 1.1, 2, 0
-                                 //|CV_HAAR_FIND_BIGGEST_OBJECT
-                                 //|CV_HAAR_DO_ROUGH_SEARCH
-                                 |CV_HAAR_SCALE_IMAGE
-                                 ,
-                                 Size(30, 30) );
-        for( vector<Rect>::const_iterator r = faces2.begin(); r != faces2.end(); r++ )
-        {
-            faces.push_back(Rect(smallImg.cols - r->x - r->width, r->y, r->width, r->height));
-        }
-    }
-    t = (double)cvGetTickCount() - t;
-    printf( "detection time = %g ms\n", t/((double)cvGetTickFrequency()*1000.) );
-    
-    // --Alignment
-    t =(double)cvGetTickCount();
-    for( vector<Rect>::const_iterator r = faces.begin(); r != faces.end(); r++, i++ ){
-        Point center;
-        Scalar color = colors[i%8];
-        BoundingBox boundingbox;
-        
-        boundingbox.start_x = r->x*scale;
-        boundingbox.start_y = r->y*scale;
-        boundingbox.width   = (r->width-1)*scale;
-        boundingbox.height  = (r->height-1)*scale;
-        boundingbox.centroid_x = boundingbox.start_x + boundingbox.width/2.0;
-        boundingbox.centroid_y = boundingbox.start_y + boundingbox.height/2.0;
-        
-        t =(double)cvGetTickCount();
-        Mat_<double> current_shape = regressor.Predict(gray,boundingbox,1);
-        t = (double)cvGetTickCount() - t;
-        printf( "alignment time = %g ms\n", t/((double)cvGetTickFrequency()*1000.) );
-//        // draw bounding box
-     // rectangle(img, cvPoint(boundingbox.start_x,boundingbox.start_y),
-     //             cvPoint(boundingbox.start_x+boundingbox.width,boundingbox.start_y+boundingbox.height),Scalar(0,255,0), 1, 8, 0);
-        // draw result :: red
-        for(int i = 0;i < global_params.landmark_num;i++){
-             circle(img,Point2d(current_shape(i,0),current_shape(i,1)),3,Scalar(255,255,255),-1,8,0);
-        }
+
+void detectAndDraw(Mat& img, CascadeClassifier& cascade,
+	LBFRegressor& regressor,
+	double scale, bool tryflip) {
+	Mat myclip;
+	int i = 0;
+	double t = 0;
+	vector<Rect> faces, faces2;
+	const static Scalar colors[] = { CV_RGB(0,0,255),
+		CV_RGB(0,128,255),
+		CV_RGB(0,255,255),
+		CV_RGB(0,255,0),
+		CV_RGB(255,128,0),
+		CV_RGB(255,255,0),
+		CV_RGB(255,0,0),
+		CV_RGB(255,0,255) };
+	Mat gray, smallImg(cvRound(img.rows / scale), cvRound(img.cols / scale), CV_8UC1);
+
+	cvtColor(img, gray, CV_BGR2GRAY);
+	resize(gray, smallImg, smallImg.size(), 0, 0, INTER_LINEAR);
+	equalizeHist(smallImg, smallImg);
+
+	// --Detection
+	t = (double)cvGetTickCount();
+	int * pResults = NULL;
+	pResults = facedetect_frontal((unsigned char*)(smallImg.ptr(0)), smallImg.cols, smallImg.rows, smallImg.step, 1.2f, 3, 24);
+	//cascade.detectMultiScale( smallImg, faces,
+	//    1.1, 2, 0
+	//    //|CV_HAAR_FIND_BIGGEST_OBJECT
+	//    //|CV_HAAR_DO_ROUGH_SEARCH
+	//    |CV_HAAR_SCALE_IMAGE
+	//    ,
+	//    Size(30, 30) );
+
+	for (int i = 0; i < (pResults ? *pResults : 0); i++)
+	{
+		short * p = ((short*)(pResults + 1)) + 6 * i;
+		int x = p[0];
+		int y = p[1];
+		int w = p[2];
+		int h = p[3];
+		int neighbors = p[4];
+		cout << x <<" "<<y<<" "<<w<<" "<<h<<endl;
+		faces.push_back(Rect(x, y, w, h));
+	}
+	t = (double)cvGetTickCount() - t;
+	printf("detection time = %g ms\n", t / ((double)cvGetTickFrequency()*1000.));
+
+	// --Alignment
+	t = (double)cvGetTickCount();
+	for (vector<Rect>::const_iterator r = faces.begin(); r != faces.end(); r++, i++) {
+		Point center;
+		Scalar color = colors[i % 8];
+		BoundingBox boundingbox;
+
+		boundingbox.start_x = r->x*scale;
+		boundingbox.start_y = r->y*scale;
+		boundingbox.width = (r->width - 1)*scale;
+		boundingbox.height = (r->height - 1)*scale;
+		boundingbox.centroid_x = boundingbox.start_x + boundingbox.width / 2.0;
+		boundingbox.centroid_y = boundingbox.start_y + boundingbox.height / 2.0;
+
+		t = (double)cvGetTickCount();
+		Mat_<double> current_shape = regressor.Predict(gray, boundingbox, 1);
+		t = (double)cvGetTickCount() - t;
+		printf("alignment time = %g ms\n", t / ((double)cvGetTickFrequency()*1000.));
+		//        // draw bounding box
+		// rectangle(img, cvPoint(boundingbox.start_x,boundingbox.start_y),
+		//             cvPoint(boundingbox.start_x+boundingbox.width,boundingbox.start_y+boundingbox.height),Scalar(0,255,0), 1, 8, 0);
+		// draw result :: red
+		for (int i = 0; i < global_params.landmark_num; i++) {
+			circle(img, Point2d(current_shape(i, 0), current_shape(i, 1)), 3, Scalar(255, 255, 255), -1, 8, 0);
+		}
 		vector<Point2f> temp;
 
 		for (int i = 0; i < global_params.landmark_num; i++) {
 			temp.push_back(Point2f(current_shape(i, 0), current_shape(i, 1)));
 		}
 
-		myclip=getwarpAffineImg(img,temp);
-		if(myclip.size().width>0&&myclip.size().height>0)
-		cv::imshow("result1",myclip);
+		myclip = getwarpAffineImg(img, temp);
+		if (myclip.size().width>0 && myclip.size().height>0)
+			cv::imshow("result1", myclip);
 		_sleep(15);//
 
-    }
-    cv::imshow( "result", img );
-	
-   // char a = waitKey(0);
-   // if(a=='s'){
-    //    save_count++;
-   //     imwrite(to_string(save_count)+".jpg", img);
-  //  }
+	}
+	cv::imshow("result", img);
+
+	// char a = waitKey(0);
+	// if(a=='s'){
+	//    save_count++;
+	//     imwrite(to_string(save_count)+".jpg", img);
+	//  }
 }
+
+
+//void detectAndDraw( Mat& img, CascadeClassifier& cascade,
+//                    LBFRegressor& regressor,
+//                    double scale, bool tryflip ){
+//	Mat myclip;
+//    int i = 0;
+//    double t = 0;
+//    vector<Rect> faces,faces2;
+//    const static Scalar colors[] =  { CV_RGB(0,0,255),
+//        CV_RGB(0,128,255),
+//        CV_RGB(0,255,255),
+//        CV_RGB(0,255,0),
+//        CV_RGB(255,128,0),
+//        CV_RGB(255,255,0),
+//        CV_RGB(255,0,0),
+//        CV_RGB(255,0,255)} ;
+//    Mat gray, smallImg( cvRound (img.rows/scale), cvRound(img.cols/scale), CV_8UC1 );
+//
+//    cvtColor( img, gray, CV_BGR2GRAY );
+//    resize( gray, smallImg, smallImg.size(), 0, 0, INTER_LINEAR );
+//    equalizeHist( smallImg, smallImg );
+//	
+//    // --Detection
+//    t = (double)cvGetTickCount();
+//	int * pResults = NULL;
+//	pResults= facedetect_frontal((unsigned char*)(smallImg.ptr(0)), smallImg.cols, smallImg.rows, smallImg.step,1.2f, 3,  24);
+//    //cascade.detectMultiScale( smallImg, faces,
+//    //    1.1, 2, 0
+//    //    //|CV_HAAR_FIND_BIGGEST_OBJECT
+//    //    //|CV_HAAR_DO_ROUGH_SEARCH
+//    //    |CV_HAAR_SCALE_IMAGE
+//    //    ,
+//    //    Size(30, 30) );
+//
+//    if( tryflip ){
+//        flip(smallImg, smallImg, 1);
+//		pResults = facedetect_frontal((unsigned char*)(smallImg.ptr(0)), smallImg.cols, smallImg.rows, smallImg.step, 1.2f, 3, 24);
+//			for(int i = 0; i < (pResults ? *pResults : 0); i++)
+//			{
+//		        short * p = ((short*)(pResults+1))+6*i;
+//				int x = p[0];
+//				int y = p[1];
+//				int w = p[2];
+//				int h = p[3];
+//				int neighbors = p[4];
+//				cout << i << endl;
+//				faces.push_back(Rect(smallImg.cols-x-w,y,w,h));
+//			}
+//		//cascade.detectMultiScale( smallImg, faces2,
+//        //                         1.1, 2, 0
+//        //                         //|CV_HAAR_FIND_BIGGEST_OBJECT
+//        //                         //|CV_HAAR_DO_ROUGH_SEARCH
+//        //                         |CV_HAAR_SCALE_IMAGE
+//        //                         ,
+//        //                         Size(30, 30) );
+//    //    for( vector<Rect>::const_iterator r = faces2.begin(); r != faces2.end(); r++ )
+//    //    {
+//    //        faces.push_back(Rect(smallImg.cols - r->x - r->width, r->y, r->width, r->height));
+//    //    }
+//    }
+//    t = (double)cvGetTickCount() - t;
+//    printf( "detection time = %g ms\n", t/((double)cvGetTickFrequency()*1000.) );
+//    
+//    // --Alignment
+//    t =(double)cvGetTickCount();
+//    for( vector<Rect>::const_iterator r = faces.begin(); r != faces.end(); r++, i++ ){
+//        Point center;
+//        Scalar color = colors[i%8];
+//        BoundingBox boundingbox;
+//        
+//        boundingbox.start_x = r->x*scale;
+//        boundingbox.start_y = r->y*scale;
+//        boundingbox.width   = (r->width-1)*scale;
+//        boundingbox.height  = (r->height-1)*scale;
+//        boundingbox.centroid_x = boundingbox.start_x + boundingbox.width/2.0;
+//        boundingbox.centroid_y = boundingbox.start_y + boundingbox.height/2.0;
+//        
+//        t =(double)cvGetTickCount();
+//        Mat_<double> current_shape = regressor.Predict(gray,boundingbox,1);
+//        t = (double)cvGetTickCount() - t;
+//        printf( "alignment time = %g ms\n", t/((double)cvGetTickFrequency()*1000.) );
+////        // draw bounding box
+//     // rectangle(img, cvPoint(boundingbox.start_x,boundingbox.start_y),
+//     //             cvPoint(boundingbox.start_x+boundingbox.width,boundingbox.start_y+boundingbox.height),Scalar(0,255,0), 1, 8, 0);
+//        // draw result :: red
+//        for(int i = 0;i < global_params.landmark_num;i++){
+//             circle(img,Point2d(current_shape(i,0),current_shape(i,1)),3,Scalar(255,255,255),-1,8,0);
+//        }
+//		vector<Point2f> temp;
+//
+//		for (int i = 0; i < global_params.landmark_num; i++) {
+//			temp.push_back(Point2f(current_shape(i, 0), current_shape(i, 1)));
+//		}
+//
+//		myclip=getwarpAffineImg(img,temp);
+//		if(myclip.size().width>0&&myclip.size().height>0)
+//		cv::imshow("result1",myclip);
+//		_sleep(15);//
+//
+//    }
+//    cv::imshow( "result", img );
+//	
+//   // char a = waitKey(0);
+//   // if(a=='s'){
+//    //    save_count++;
+//   //     imwrite(to_string(save_count)+".jpg", img);
+//  //  }
+//}

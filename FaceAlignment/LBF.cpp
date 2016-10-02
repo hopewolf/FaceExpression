@@ -8,6 +8,7 @@
 
 #include "LBF.h"
 #include "LBFRegressor.h"
+
 using namespace std;
 using namespace cv;
 
@@ -65,7 +66,7 @@ int main( int argc, const char** argv ){
         TrainModel(trainDataName);
     }
     else if (strcmp(argv[1], "TestModel")==0){
-        vector<string> testDataName;
+		vector<string> testDataName;
      // you need to modify this section according to your training dataset
         testDataName.push_back("ibug");
      //   testDataName.push_back("helen");
