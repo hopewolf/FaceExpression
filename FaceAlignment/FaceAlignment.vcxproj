@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Facedetect.cpp" />
+    <ClCompile Include="lbp.cpp" />
     <ClCompile Include="LBF.cpp" />
     <ClCompile Include="LBFRegressor.cpp" />
     <ClCompile Include="libfacedetect-example.cpp" />
@@ -21,6 +22,7 @@
     <ClCompile Include="liblinear\dscal.c" />
     <ClCompile Include="liblinear\linear.cpp" />
     <ClCompile Include="liblinear\tron.cpp" />
+    <ClCompile Include="PredictExpression.cpp" />
     <ClCompile Include="RandomForest.cpp" />
     <ClCompile Include="TestModel.cpp" />
     <ClCompile Include="TrainModel.cpp" />
@@ -31,6 +33,7 @@
     <ClInclude Include="facedetect-dll.h" />
     <ClInclude Include="LBF.h" />
     <ClInclude Include="LBFRegressor.h" />
+    <ClInclude Include="lbp.h" />
     <ClInclude Include="liblinear\blas.h" />
     <ClInclude Include="liblinear\blasp.h" />
     <ClInclude Include="liblinear\linear.h" />
@@ -42,13 +45,15 @@
     <ProjectGuid>{7BCC4B03-4CC5-4D01-B730-748BCF65E5D9}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>FaceAlignment</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>

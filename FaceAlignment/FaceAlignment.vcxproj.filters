@@ -60,6 +60,12 @@
     <ClCompile Include="libfacedetect-example.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="lbp.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="PredictExpression.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="LBF.h">
@@ -87,6 +93,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="facedetect-dll.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="lbp.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -8,6 +8,7 @@
 
 #include "LBF.h"
 #include "LBFRegressor.h"
+#include"lbp.h"
 
 using namespace std;
 using namespace cv;
@@ -23,28 +24,11 @@ string cascadeName = "lbpcascade_frontalface.xml";
 void InitializeGlobalParam();
 void PrintHelp();
 
+
 int main( int argc, const char** argv ){
-//    double rs[3] = {0.4,0.15,0.08};
-//    for (int i=0;i<3;i++){
-//        Mat image = imread("/Users/lequan/workspace/LBF/Datasets/afw/437595409_1.jpg");
-//        string name1("/Users/lequan/workspace/LBF/Datasets/afw/437595409_1.pts");
-//        InitializeGlobalParam();
-//        Mat_<double> ground_truth_shape = LoadGroundTruthShape(name1);
-//        BoundingBox bbx = CalculateBoundingBox(ground_truth_shape);
-//        double r = rs[i]*bbx.height/2.0;
-//        int a[13]={18,22,37,40,23,27,43,46,31,49,55,52,58};
-//        for(int j = 0;j <13;j++){
-//            cout <<j<<endl;
-//            circle(image,Point2d(ground_truth_shape(a[j]-1,0),ground_truth_shape(a[j]-1,1)),r,Scalar(255,255,255),2,8,0);
-//        }
-//        imshow("result", image);
-//        waitKey(0);
-//        string name = "radius" + to_string(i)+".jpg";
-//        imwrite(name,image);
-//    }
-    //initialize parameters
 
-
+	FpOfVlbp = fopen("./resultvlbp.txt", "w");
+	FpOfLbpTop = fopen("./resulttop.txt", "w");
 
     if (argc > 1 && strcmp(argv[1],"TrainModel")==0){
         InitializeGlobalParam();
@@ -67,13 +51,13 @@ int main( int argc, const char** argv ){
     }
     else if (strcmp(argv[1], "TestModel")==0){
 		vector<string> testDataName;
-     // you need to modify this section according to your training dataset
         testDataName.push_back("ibug");
-     //   testDataName.push_back("helen");
         double MRSE = TestModel(testDataName);
         
     }
     else if (strcmp(argv[1], "Demo")==0){
+		PredictFromCam();
+		return 0;
         if (argc == 2){
             return FaceDetectionAndAlignment("");
         }
@@ -81,6 +65,13 @@ int main( int argc, const char** argv ){
             return FaceDetectionAndAlignment(argv[2]);
         }
     }
+	else if (strcmp(argv[1], "HandleImages") == 0)
+	{
+		LBFRegressor myregressor;
+		myregressor.Load(modelPath + "LBF.model");
+		//you need to modify this path to your face store
+		ListImage("G:\\extended-cohn-kanade-images\\cohn-kanade-images",cutFace,myregressor);
+	}
     else {
         PrintHelp();
     }

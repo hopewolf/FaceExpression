@@ -30,7 +30,7 @@
 #include <fstream>
 #include <numeric>   
 #include <utility> 
-
+#define MAXNUMIMAGE 100
 struct Params{
     
     double bagging_overlap;
@@ -111,4 +111,12 @@ int FaceDetectionAndAlignment(const char* inputname);
 void ReadGlobalParamFromFile(std::string path);
 double CalculateError(const cv::Mat_<double>& ground_truth_shape, const cv::Mat_<double>& predicted_shape);
 cv::Mat getwarpAffineImg(cv::Mat &src, std::vector<cv::Point2f> &landmarks);
+
+class LBFRegressor;
+int FacesDetectionAndAlignment(const char inputname[100][260], int num,char *lpath, LBFRegressor& regressor);
+
+cv::Mat detectAndDraw(cv::Mat& img, LBFRegressor& regressor, double scale, bool tryflip);
+void cutFace(char imagefile[MAXNUMIMAGE][260], int len, char *lpath, LBFRegressor& regressor);
+extern FILE * FpOfVlbp;
+extern FILE * FpOfLbpTop;
 #endif

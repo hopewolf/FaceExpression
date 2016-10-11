@@ -1,7 +1,12 @@
+#include "string.h"
+
 #include "LBF.h"
 #include "LBFRegressor.h"
+
 using namespace std;
 using namespace cv;
+
+
 
 
 Mat_<double> GetMeanShape(const vector<Mat_<double> >& shapes,
@@ -518,7 +523,7 @@ Mat getwarpAffineImg(Mat &src, vector<Point2f> &landmarks)
 	{
 		
 
-			circle(rot, marks[j], 2, Scalar(0, 255, 0));	
+		//	circle(rot, marks[j], 2, Scalar(0, 255, 0));	
 	}
 
 //	return rot;
@@ -527,11 +532,11 @@ Mat getwarpAffineImg(Mat &src, vector<Point2f> &landmarks)
 	Mat resultRot1(150, 160, CV_8UC3, cv::Scalar(0, 0, 255));
 	if (((Facelocation.x + maxwidth) < rot.size().width) && (((Facelocation.y + maxheight ))< rot.size().height))
 	{
-	//	cout <<"width:"<< maxwidth << " height" << maxheight - 1 << endl;
+		//cout <<"width:"<< maxwidth << " height" << maxheight - 1 << endl;
 		//cout << rot.size() << endl;
 		//cout << Facelocation.x << " + " << maxwidth << " = " << Facelocation.x + maxwidth << endl;
 		//cout<< Facelocation.y << " + "<< maxheight <<" = " << Facelocation.y + maxheight << endl;
-		resultRot0 = rot(Rect(Facelocation.x, Facelocation.y, maxwidth-2 , maxheight -2));
+		resultRot0 = rot(Rect(Facelocation.x, Facelocation.y, maxwidth , maxheight ));
 	}
 
 
@@ -539,3 +544,4 @@ Mat getwarpAffineImg(Mat &src, vector<Point2f> &landmarks)
 	return resultRot1;
 
 }
+

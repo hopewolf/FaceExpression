@@ -8,23 +8,74 @@
 #include "opencv2/opencv.hpp"
 #include "facedetect-dll.h"
 #pragma comment(lib,"libfacedetect.lib")
-
 #include "LBFRegressor.h"
+#include "windows.h"
+#include <stdlib.h> 
 using namespace std;
 using namespace cv;
-int save_count=0;
-void detectAndDraw(Mat& img,
-                   CascadeClassifier& nestedCascade, LBFRegressor& regressor,
-                   double scale, bool tryflip );
+
+//extern LBFRegressor myregressor;
+//void cutFace(char imagefile[MAXNUMIMAGE][MAX_PATH], int len, char *lpath)
+//{
+//	LBFRegressor myregressor;
+//	myregressor.Load(modelPath + "LBF.model");
+//	FacesDetectionAndAlignment(imagefile, len, lpath, myregressor);
+//}
+void cutFace(char imagefile[MAXNUMIMAGE][MAX_PATH], int len, char *lpath,LBFRegressor& regressor)
+{
+	FacesDetectionAndAlignment(imagefile, len, lpath, regressor);
+}
+
+int FacesDetectionAndAlignment(const char inputname[100][260],int num,char *lpath, LBFRegressor& regressor)
+{
+	string inputName;
+	bool tryflip = false;
+	double scale = 1.3;
+	Mat frame, frameCopy, image;
+
+	Mat face;
+	char cmd[264];
+	for (int i = 0; i < num; i++)
+	{
+		strcpy( cmd, "del ");
+		strcat(cmd, inputname[i]);
+		cout << cmd << endl;
+		//cout << inputname[i] << endl;
+		inputName.assign(inputname[i]);
+		if (inputName.size()) {
+			if (inputName.find(".jpg") != string::npos || inputName.find(".png") != string::npos
+				|| inputName.find(".bmp") != string::npos) {
+				image = imread(inputName, 1);
+				if (image.empty()) {
+					cout << "Read Image fail" << endl;
+					return -1;
+				}
+			}
+		}
+		if (!image.empty()) {
+			cout << "In image read" << endl;
+			face=detectAndDraw(image, regressor, scale, tryflip);
+			system(cmd);
+			if(!face.empty())
+			imwrite(inputname[i], face);
+			//waitKey(0);
+		}	
+	}
+
+//cvDestroyWindow("result");
+
+
+}
+
+
 
 int FaceDetectionAndAlignment(const char* inputname){
-       extern string cascadeName;
+    extern string cascadeName;
     string inputName;
     CvCapture* capture = 0;
     Mat frame, frameCopy, image;
     bool tryflip = false;
     double scale  = 1.3;
-    CascadeClassifier cascade;
     
     if (inputname!=NULL){
         inputName.assign(inputname);
@@ -59,15 +110,7 @@ int FaceDetectionAndAlignment(const char* inputname){
     // -- 0. Load LBF model
     LBFRegressor regressor;
     regressor.Load(modelPath+"LBF.model");
-    
-    // -- 1. Load the cascades
-    if( !cascade.load( cascadeName ) ){
-        cerr << "ERROR: Could not load classifier cascade" << endl;
-        return -1;
-    }
 
-    // cvNamedWindow( "result", 1 );
-    // -- 2. Read the video stream
     if( capture ){
         cout << "In capture ..." << endl;
         for(;;){
@@ -80,7 +123,7 @@ int FaceDetectionAndAlignment(const char* inputname){
             else
                 flip( frame, frameCopy, 0 );
 
-            detectAndDraw( frameCopy, cascade,regressor, scale, tryflip );
+            detectAndDraw(frameCopy,regressor, scale, tryflip );
 
            if( waitKey( 10 ) >= 0 )
              goto _cleanup_;
@@ -95,7 +138,7 @@ _cleanup_:
        
         if( !image.empty() ){
             cout << "In image read" << endl;
-            detectAndDraw( image, cascade,regressor,  scale, tryflip );
+            detectAndDraw( image,regressor,  scale, tryflip );
             waitKey(0);
         }
         else if( !inputName.empty() ){
@@ -113,7 +156,7 @@ _cleanup_:
                     cout << "file " << buf << endl;
                     image = imread( buf, 1 );    
                     if( !image.empty() ){
-                        detectAndDraw(image, cascade,regressor,scale, tryflip );
+                        detectAndDraw(image, regressor,scale, tryflip );
                         c = waitKey(0);
                         if( c == 27 || c == 'q' || c == 'Q' )
                             break;
@@ -135,9 +178,7 @@ _cleanup_:
 
 
 
-void detectAndDraw(Mat& img, CascadeClassifier& cascade,
-	LBFRegressor& regressor,
-	double scale, bool tryflip) {
+Mat detectAndDraw(Mat& img,LBFRegressor& regressor,double scale, bool tryflip) {
 	Mat myclip;
 	int i = 0;
 	double t = 0;
@@ -159,15 +200,7 @@ void detectAndDraw(Mat& img, CascadeClassifier& cascade,
 	// --Detection
 	t = (double)cvGetTickCount();
 	int * pResults = NULL;
-	pResults = facedetect_frontal((unsigned char*)(smallImg.ptr(0)), smallImg.cols, smallImg.rows, smallImg.step, 1.2f, 3, 24);
-	//cascade.detectMultiScale( smallImg, faces,
-	//    1.1, 2, 0
-	//    //|CV_HAAR_FIND_BIGGEST_OBJECT
-	//    //|CV_HAAR_DO_ROUGH_SEARCH
-	//    |CV_HAAR_SCALE_IMAGE
-	//    ,
-	//    Size(30, 30) );
-
+	pResults = facedetect_frontal_surveillance((unsigned char*)(smallImg.ptr(0)), smallImg.cols, smallImg.rows, smallImg.step, 1.2f, 3, 24);
 	for (int i = 0; i < (pResults ? *pResults : 0); i++)
 	{
 		short * p = ((short*)(pResults + 1)) + 6 * i;
@@ -176,19 +209,19 @@ void detectAndDraw(Mat& img, CascadeClassifier& cascade,
 		int w = p[2];
 		int h = p[3];
 		int neighbors = p[4];
-		cout << x <<" "<<y<<" "<<w<<" "<<h<<endl;
+		cout << x <<" "<<y<<" "<<w<<" "<<h<<" "<<p[5]<<endl;
 		faces.push_back(Rect(x, y, w, h));
 	}
 	t = (double)cvGetTickCount() - t;
 	printf("detection time = %g ms\n", t / ((double)cvGetTickFrequency()*1000.));
-
-	// --Alignment
 	t = (double)cvGetTickCount();
+	Mat totalclip;
+	Mat oldtotalclip;
+	bool pinjie = false;
 	for (vector<Rect>::const_iterator r = faces.begin(); r != faces.end(); r++, i++) {
 		Point center;
 		Scalar color = colors[i % 8];
-		BoundingBox boundingbox;
-
+		BoundingBox boundingbox;	
 		boundingbox.start_x = r->x*scale;
 		boundingbox.start_y = r->y*scale;
 		boundingbox.width = (r->width - 1)*scale;
@@ -200,13 +233,6 @@ void detectAndDraw(Mat& img, CascadeClassifier& cascade,
 		Mat_<double> current_shape = regressor.Predict(gray, boundingbox, 1);
 		t = (double)cvGetTickCount() - t;
 		printf("alignment time = %g ms\n", t / ((double)cvGetTickFrequency()*1000.));
-		//        // draw bounding box
-		// rectangle(img, cvPoint(boundingbox.start_x,boundingbox.start_y),
-		//             cvPoint(boundingbox.start_x+boundingbox.width,boundingbox.start_y+boundingbox.height),Scalar(0,255,0), 1, 8, 0);
-		// draw result :: red
-		for (int i = 0; i < global_params.landmark_num; i++) {
-			circle(img, Point2d(current_shape(i, 0), current_shape(i, 1)), 3, Scalar(255, 255, 255), -1, 8, 0);
-		}
 		vector<Point2f> temp;
 
 		for (int i = 0; i < global_params.landmark_num; i++) {
@@ -214,18 +240,30 @@ void detectAndDraw(Mat& img, CascadeClassifier& cascade,
 		}
 
 		myclip = getwarpAffineImg(img, temp);
-		if (myclip.size().width>0 && myclip.size().height>0)
-			cv::imshow("result1", myclip);
-		_sleep(15);//
+		if (totalclip.empty())
+		{
+			totalclip = myclip;
+			pinjie = false;
+
+		}
+		else
+		{
+			oldtotalclip = totalclip;
+			hconcat(oldtotalclip, myclip,totalclip);
+		}
 
 	}
-	cv::imshow("result", img);
-
-	// char a = waitKey(0);
-	// if(a=='s'){
-	//    save_count++;
-	//     imwrite(to_string(save_count)+".jpg", img);
-	//  }
+	if (totalclip.size().width > 0 && totalclip.size().height > 0)
+	{
+		//cv::imshow("result1", totalclip);
+		//_sleep(00);
+		
+	}
+	else
+	{
+		cout << "No face!" << endl;
+	}
+	return totalclip;
 }
 
 
